@@ -4,4 +4,4 @@ from .models import GridSetting
 class GridSettingSerializer(serializers.ModelSerializer):
     class Meta:
         model = GridSetting
-        fields = ['id', 'name', 'data']
+        fields = ['id', 'name', 'data','user']

@@ -4,6 +4,7 @@ from django.conf import settings  # <-- important
 class GridSetting(models.Model):
     name = models.CharField(max_length=255)
     data = models.JSONField()
+    user = models.CharField(max_length=50)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,  # <-- dynamic reference
         on_delete=models.CASCADE,
