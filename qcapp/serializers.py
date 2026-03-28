@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.conf import settings
+from datetime import date
 
 from .models import QcAdminMistake,Unit, Line, MachineAllocation, machine_details, emp_allocate,Empwisesal,VueProcessSequence
 
@@ -56,10 +57,21 @@ class MachineAllocationSerializer(serializers.ModelSerializer):
         today = timezone.now().date()
 
         # Get the latest allocation for today
+        # latest_emp = (
+        #     emp_allocate.objects
+        #     .filter(machine_id=obj.machine.id, date=today)
+        #     .order_by('-id')  # higher ID = last allocation
+        #     .first()
+        # )
         latest_emp = (
             emp_allocate.objects
-            .filter(machine_id=obj.machine.id, date=today)
-            .order_by('-id')  # higher ID = last allocation
+            .filter(
+                machine_id=obj.machine.id,
+                date=today,
+                unit=obj.unit.id,     # 👈 important
+                line=obj.line.id      # 👈 important
+            )
+            .order_by('-id')
             .first()
         )
 
@@ -99,3 +111,65 @@ class VueProcessSequenceSerializer(serializers.ModelSerializer):
         model = VueProcessSequence
         fields = ['process_des', 'sl', 'prsid']
 
+
+
+# class MachineTrasnsferSerializer(serializers.ModelSerializer):
+#     machine_id = serializers.PrimaryKeyRelatedField(
+#         queryset=machine_details.objects.all(),
+#         source='machine'
+#     )
+#     machine = serializers.CharField(source='machine.Identity', read_only=True)
+#     unit_name = serializers.CharField(source='unit.name', read_only=True)
+#     line_number = serializers.IntegerField(source='line.line_number', read_only=True)
+
+#     class Meta:
+#         model = MachineAllocation
+#         fields = ['id', 'machine', 'machine_id', 'unit', 'unit_name', 'line', 'line_number', 'allocated_at']
+
+#     def validate(self, data):
+#         # Validate that line belongs to the unit
+#         unit = data.get('unit', getattr(self.instance, 'unit', None))
+#         line = data.get('line', getattr(self.instance, 'line', None))
+#         if line and unit and line.unit != unit:
+#             raise serializers.ValidationError("Selected line does not belong to the selected unit")
+#         return data
+
+
+class MachineTrasnsferSerializer(serializers.ModelSerializer):
+
+    machine_id = serializers.PrimaryKeyRelatedField(
+        queryset=machine_details.objects.all(),
+        source='machine'
+    )
+    machine = serializers.CharField(source='machine.Identity', read_only=True)
+    unit_name = serializers.CharField(source='unit.name', read_only=True)
+    line_number = serializers.IntegerField(source='line.line_number', read_only=True)
+
+    class Meta:
+        model = MachineAllocation
+        fields = ['id', 'machine', 'machine_id', 'unit', 'unit_name', 'line', 'line_number', 'allocated_at']
+
+    def validate(self, data):
+        unit = data.get('unit', getattr(self.instance, 'unit', None))
+        line = data.get('line', getattr(self.instance, 'line', None))
+        machine = data.get('machine', getattr(self.instance, 'machine', None))
+
+        # ✅ Line belongs to unit validation
+        if line and unit and line.unit != unit:
+            raise serializers.ValidationError("Selected line does not belong to the selected unit")
+
+        # ✅ NEW CONDITION: employee allocation check
+        today = date.today()
+
+        emp_exists = emp_allocate.objects.filter(
+            machine=machine,
+            date=today,
+            status=True   # status = 1 (allocated)
+        ).exists()
+
+        if emp_exists:
+            raise serializers.ValidationError(
+                "An employee is already assigned today; mark them offline to allow transfer"
+            )
+
+        return data

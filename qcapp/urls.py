@@ -30,6 +30,13 @@ urlpatterns = [
     # Allocate employee to machine
     path('api/emp_allocate/', EmpAllocateAPIView.as_view(), name='emp-allocate'),
     path('api/process-sequence/', views.get_process_sequence, name='process-sequence'),
+    path('api/machine/<path:identity>/', views.get_machine_employee),
+
+
+    path('api/machine-transfer/', MachineTransferListCreateAPIView.as_view(), name='machine-transfer-list-create'),
+    path('api/machine-transfer/<int:pk>/', MachineTransferDetailAPIView.as_view(), name='machine-transfer-detail'),
+
+    
 
 ]
 

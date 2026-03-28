@@ -99,6 +99,8 @@ class SubMenuSerializer(serializers.ModelSerializer):
 #         fields = ["id", "name", "icon", "order", "submenus"]
 
 
+
+
 class MenuSerializer(serializers.ModelSerializer):
     submenus = serializers.SerializerMethodField()
 
@@ -107,10 +109,9 @@ class MenuSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "icon", "order", "submenus"]
 
     def get_submenus(self, obj):
+        # Include **all children recursively**
         top_level = obj.submenus.filter(parent__isnull=True)
         return SubMenuSerializer(top_level, many=True, context=self.context).data
-
-
 
 class RoleMenuPermissionSerializer(serializers.ModelSerializer):
     # Accept IDs for write operations

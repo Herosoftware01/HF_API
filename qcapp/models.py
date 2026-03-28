@@ -46,6 +46,7 @@ class qc_piece_data(models.Model):
     mistake_count = models.IntegerField()
     total_mistake = models.IntegerField()
     mistake_percentage = models.CharField(max_length=20)
+    qc_type = models.CharField(max_length=50)
 
 class qc_piece_final(models.Model):
     bundle_no = models.CharField(max_length=20)
@@ -59,40 +60,42 @@ class qc_piece_final(models.Model):
     total_pieces = models.IntegerField()
     checked_piece = models.IntegerField()
     force_save = models.BooleanField(default=False)
+    qc_type = models.CharField(max_length=50)
 
 
 class machine_details(models.Model):
     Identity = models.CharField(max_length=100)
     Item = models.CharField(max_length=100)
     Description = models.CharField(max_length=100)
+    mcgrp = models.CharField(db_column='MCGRP', max_length=50,blank=True, null=True)
 
 
 class MachineAllocation(models.Model):
     machine = models.ForeignKey(
         machine_details,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         related_name="allocations"
     )
 
     unit = models.ForeignKey(
         Unit,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
     )
 
     line = models.ForeignKey(
         Line,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
     )
 
     allocated_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['machine'], name='one_machine_one_line')
-        ]
+        pass
+        # constraints = [
+        #     models.UniqueConstraint(fields=['machine'], name='one_machine_one_line')
+        # ]
 
     def clean(self):
-        # 🔥 முக்கிய validation
         if self.line.unit != self.unit:
             raise ValidationError("Selected line does not belong to the selected unit")
 
@@ -235,6 +238,7 @@ class VueProcessSequence(models.Model):
     sl1 = models.IntegerField(db_column='SL1')  # Field name made lowercase.
     prsid = models.IntegerField(db_column='PRSID')  # Field name made lowercase.
     process_des = models.CharField(db_column='Process_des', max_length=150, blank=True, null=True)  # Field name made lowercase.
+    mc = models.CharField(max_length=20, blank=True, null=True)
 
     class Meta:
         managed = False

@@ -8,35 +8,113 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from .models import QcAdminMistake,Unit,Line,qc_piece_final, MachineAllocation, machine_details, emp_allocate, Empwisesal, VueProcessSequence
-from .serializers import QcAdminMistakeSerializer,UnitSerializer,MachineSerializer,LineSerializer, MachineAllocationSerializer, VueProcessSequenceSerializer
+from .serializers import QcAdminMistakeSerializer,UnitSerializer,MachineTrasnsferSerializer,MachineSerializer,LineSerializer, MachineAllocationSerializer, VueProcessSequenceSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 from collections import defaultdict
 
 from datetime import date
 from django.utils.timezone import now
+from django.conf import settings
+
+
+
+# class QcAdminMistakeAPIView(APIView):
+#     permission_classes = [permissions.IsAuthenticated]
+
+#     # GET (List)
+#     def get(self, request):
+#         mistakes = QcAdminMistake.objects.all()
+#         serializer = QcAdminMistakeSerializer(mistakes, many=True)
+#         return Response(serializer.data)
+
+#     # POST (Create)
+#     def post(self, request):
+#         serializer = QcAdminMistakeSerializer(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+# class QcAdminMistakeDetailAPIView(APIView):
+#     permission_classes = [permissions.IsAuthenticated]
+#     parser_classes = (MultiPartParser, FormParser)
+
+#     def get_object(self, pk):
+#         try:
+#             return QcAdminMistake.objects.get(pk=pk)
+#         except QcAdminMistake.DoesNotExist:
+#             return None
+
+#     # GET single
+#     def get(self, request, pk):
+#         mistake = self.get_object(pk)
+#         if not mistake:
+#             return Response({"error": "Not found"}, status=404)
+
+#         serializer = QcAdminMistakeSerializer(mistake)
+#         return Response(serializer.data)
+
+#     # PUT update
+#     def put(self, request, pk):
+#         mistake = self.get_object(pk)
+#         if not mistake:
+#             return Response({"error": "Not found"}, status=404)
+
+#         serializer = QcAdminMistakeSerializer(mistake, data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+
+#         return Response(serializer.errors, status=400)
+
+#     # PATCH (partial update)
+#     def patch(self, request, pk):
+#         mistake = self.get_object(pk)
+#         if not mistake:
+#             return Response({"error": "Not found"}, status=404)
+
+#         serializer = QcAdminMistakeSerializer(
+#             mistake,
+#             data=request.data,
+#             partial=True
+#         )
+
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+
+#         return Response(serializer.errors, status=400)
+
+#     # DELETE
+#     def delete(self, request, pk):
+#         mistake = self.get_object(pk)
+#         if not mistake:
+#             return Response({"error": "Not found"}, status=404)
+
+#         mistake.delete()
+#         return Response({"message": "Deleted successfully"}, status=204)
+    
 
 
 
 class QcAdminMistakeAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    # GET (List)
     def get(self, request):
         mistakes = QcAdminMistake.objects.all()
         serializer = QcAdminMistakeSerializer(mistakes, many=True)
         return Response(serializer.data)
 
-    # POST (Create)
     def post(self, request):
         serializer = QcAdminMistakeSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 class QcAdminMistakeDetailAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes = (MultiPartParser, FormParser)
 
     def get_object(self, pk):
         try:
@@ -44,7 +122,6 @@ class QcAdminMistakeDetailAPIView(APIView):
         except QcAdminMistake.DoesNotExist:
             return None
 
-    # GET single
     def get(self, request, pk):
         mistake = self.get_object(pk)
         if not mistake:
@@ -53,7 +130,6 @@ class QcAdminMistakeDetailAPIView(APIView):
         serializer = QcAdminMistakeSerializer(mistake)
         return Response(serializer.data)
 
-    # PUT update
     def put(self, request, pk):
         mistake = self.get_object(pk)
         if not mistake:
@@ -66,16 +142,13 @@ class QcAdminMistakeDetailAPIView(APIView):
 
         return Response(serializer.errors, status=400)
 
-    # PATCH (partial update)
     def patch(self, request, pk):
         mistake = self.get_object(pk)
         if not mistake:
             return Response({"error": "Not found"}, status=404)
 
         serializer = QcAdminMistakeSerializer(
-            mistake,
-            data=request.data,
-            partial=True
+            mistake, data=request.data, partial=True
         )
 
         if serializer.is_valid():
@@ -84,15 +157,17 @@ class QcAdminMistakeDetailAPIView(APIView):
 
         return Response(serializer.errors, status=400)
 
-    # DELETE
     def delete(self, request, pk):
         mistake = self.get_object(pk)
         if not mistake:
             return Response({"error": "Not found"}, status=404)
 
         mistake.delete()
-        return Response({"message": "Deleted successfully"}, status=204)
-    
+        return Response(status=204) 
+
+
+
+
 
 class LineAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -178,6 +253,7 @@ def save_piece(request):
     size = data.get("size")
     unit = data.get("unit")
     line = data.get("line")
+    qc_type = data.get("qc_type")
     total_pieces = data.get("total_pieces")
     piece_no = data.get("piece_no")
     total_mistake = data.get("total_mistake")
@@ -194,6 +270,7 @@ def save_piece(request):
             size=size,
             unit=unit,
             line=line,
+            qc_type=qc_type,
             total_pieces=total_pieces,
             piece_no=piece_no,
             total_mistake=total_mistake,
@@ -219,6 +296,7 @@ def save_final_piece(request):
         size = request.data.get("size")
         unit = request.data.get("unit")
         line = request.data.get("line")
+        qc_type = request.data.get("qc_type")
         total_pieces = int(request.data.get("total_pieces", 0))
         checked_piece = int(request.data.get("checked_piece", 0))
         force_save = request.data.get("force_save", False)
@@ -248,6 +326,7 @@ def save_final_piece(request):
             size=size,
             line=line,
             unit=unit,
+            qc_type=qc_type,
             total_pieces=total_pieces,
             checked_piece=checked_piece,
             force_save=force_save,
@@ -272,8 +351,9 @@ def get_last_bundle(request):
     from .models import qc_piece_data, qc_piece_final
     unit = request.GET.get("unit")
     line = request.GET.get("line")
+    qc_type = request.GET.get("qc_type")
 
-    last = qc_piece_data.objects.filter(unit=unit,line=line).order_by("-id").first()
+    last = qc_piece_data.objects.filter(unit=unit,line=line,qc_type=qc_type).order_by("-id").first()
 
 
     if not last:
@@ -284,14 +364,7 @@ def get_last_bundle(request):
     unit= last.unit
     piece= last.piece_no
 
-    print("unit",unit)
-    print("line",line)
-    print("bundle_id",bundle_id)
-    print("piece",piece)
-    #  count checked pieces
-    # checked_count = qc_piece_data.objects.filter(bundle_id=bundle_id).count()
 
-    #  check if completed
     is_completed = qc_piece_final.objects.filter(bundle_id=bundle_id).exists()
 
     return Response({
@@ -372,14 +445,6 @@ def import_machine_details_from_excel(request):
         return HttpResponse(f"Error: {str(e)}")
 
 
-# ------------------ Machines ------------------
-# class MachineListAPIView(APIView):
-#     permission_classes = [permissions.IsAuthenticated]
-
-#     def get(self, request):
-#         machines = machine_details.objects.all()
-#         serializer = MachineSerializer(machines, many=True)
-#         return Response(serializer.data)
 
 class MachineListAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -416,7 +481,9 @@ class LineListAPIView(APIView):
         serializer = LineSerializer(lines, many=True)
         return Response(serializer.data)
 
-# ------------------ Machine Allocation ------------------
+
+from django.db.models import Max
+
 class MachineAllocationAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -424,7 +491,15 @@ class MachineAllocationAPIView(APIView):
         unit_id = request.GET.get("unit")
         line_id = request.GET.get("line")
 
-        allocations = MachineAllocation.objects.all()
+        # Step 1: Get latest allocation id per machine
+        latest_ids = MachineAllocation.objects.values('machine').annotate(
+            latest_id=Max('id')
+        ).values_list('latest_id', flat=True)
+
+        # Step 2: Fetch only those latest allocations
+        allocations = MachineAllocation.objects.filter(id__in=latest_ids)
+
+        # Step 3: Apply filters if needed
         if unit_id:
             allocations = allocations.filter(unit=unit_id)
         if line_id:
@@ -477,19 +552,6 @@ class MachineAllocationDetailAPIView(APIView):
         return Response({"message": "Deleted successfully"}, status=204)
 
 
-# class EmployeeAPIView(APIView):
-#     def get(self, request):
-#         employees = Empwisesal.objects.using('main').filter(status='working').values()
-
-#         data = [
-#             {
-#                 "code": emp.code,
-#                 "name": emp.name
-#             }
-#             for emp in employees
-#         ]
-
-#         return Response(data)
 
 
 class EmployeeAPIView(APIView):
@@ -562,3 +624,179 @@ def get_process_sequence(request):
     queryset = VueProcessSequence.objects.using('demo').filter(jobno=jobno, topbottom_des=topbottom_des).order_by('sl')
     serializer = VueProcessSequenceSerializer(queryset, many=True)
     return Response(serializer.data)
+
+
+
+# @api_view(['GET'])
+# def get_machine_employee(request, identity):
+#     try:
+#         identity = identity.rstrip('/')
+
+#         machine = machine_details.objects.get(Identity__iexact=identity)
+
+#         today = now().date()
+
+#         last_entry = emp_allocate.objects.filter(
+#             machine=machine,
+#             date=today
+#         ).order_by('-id').first()
+
+#         # 🔥 default values
+#         emp_code = None
+#         emp_name = None
+#         photo_url = "https://www.example.com/default-profile.png"
+
+#         # ✅ only if allocation exists
+#         if last_entry:
+#             emp_code = last_entry.emp_code
+
+#             employee = Empwisesal.objects.using('main').filter(
+#                 status='working',
+#                 code=emp_code
+#             ).first()
+
+#             if employee:
+#                 emp_name = employee.name
+
+#                 if employee.photo:
+#                     filename = employee.photo.split('\\')[-1]
+#                     staff_url = settings.STAFF_IMAGES_URL.rstrip('/')
+#                     photo_url = f"http://127.0.0.1:8000/{staff_url}/{filename}"
+
+#         return Response({
+#             "machine_identity": machine.Identity,
+#             "machine_id": machine.id,
+#             "emp_code": emp_code,
+#             "employee_name": emp_name,
+#             "emp_photo": photo_url,
+#             "has_data": True if last_entry else False
+#         })
+
+#     except machine_details.DoesNotExist:
+#         return Response({
+#             "error": "Machine not found",
+#             "has_data": False
+#         }, status=404)
+
+
+
+@api_view(['GET'])
+def get_machine_employee(request, identity):
+    print("identity",identity)
+    try:
+        identity = identity.rstrip('/')
+        machine = machine_details.objects.get(Identity__iexact=identity)
+
+        today = now().date()
+        last_entry = emp_allocate.objects.filter(machine=machine, date=today).order_by('-id').first()
+
+        emp_code = None
+        emp_name = None
+        photo_url = "https://www.example.com/default-profile.png"
+
+        if last_entry:
+            emp_code = last_entry.emp_code
+            employee = Empwisesal.objects.using('main').filter(status='working', code=emp_code).first()
+            if employee:
+                emp_name = employee.name
+                if employee.photo:
+                    filename = employee.photo.split('\\')[-1]
+                    staff_url = settings.STAFF_IMAGES_URL.rstrip('/')
+                    photo_url = f"http://127.0.0.1:8000/{staff_url}/{filename}"
+
+        # Fetch matching processes from VueProcessSequence
+        jobno = request.query_params.get('jobno')
+        topbottom_des = request.query_params.get('topbottom_des')
+
+        processes = []
+        if jobno and topbottom_des:
+            queryset = VueProcessSequence.objects.using('demo').filter(
+                jobno=jobno,
+                topbottom_des=topbottom_des,
+                mc=machine.mcgrp
+            ).order_by('sl')
+            processes = [
+                {
+                    "sl": p.sl,
+                    "sl1": p.sl1,
+                    "prsid": p.prsid,
+                    "process_des": p.process_des,
+                    "mc": p.mc
+                } for p in queryset
+            ]
+
+        return Response({
+            "machine_identity": machine.Identity,
+            "machine_id": machine.id,
+            "mcgrp": machine.mcgrp,
+            "emp_code": emp_code,
+            "employee_name": emp_name,
+            "emp_photo": photo_url,
+            "has_data": True if last_entry else False,
+            "processes": processes
+        })
+
+    except machine_details.DoesNotExist:
+        return Response({
+            "error": "Machine not found",
+            "has_data": False,
+            "processes": []
+        }, status=404)
+
+
+from django.db.models import Max
+
+class MachineTransferListCreateAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        # Step 1: Get latest allocation id per machine
+        latest_ids = MachineAllocation.objects.values('machine').annotate(
+            latest_id=Max('id')
+        ).values_list('latest_id', flat=True)
+
+        # Step 2: Fetch only those latest allocations
+        allocations = MachineAllocation.objects.filter(id__in=latest_ids).select_related('machine', 'unit', 'line')
+
+        serializer = MachineTrasnsferSerializer(allocations, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = MachineTrasnsferSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()  # Allows multiple allocations per day
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MachineTransferDetailAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self, pk):
+        return get_object_or_404(MachineAllocation, pk=pk)
+
+    def get(self, request, pk):
+        allocation = self.get_object(pk)
+        serializer = MachineTrasnsferSerializer(allocation)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        allocation = self.get_object(pk)
+        serializer = MachineTrasnsferSerializer(allocation, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, pk):
+        allocation = self.get_object(pk)
+        serializer = MachineTrasnsferSerializer(allocation, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        allocation = self.get_object(pk)
+        allocation.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
