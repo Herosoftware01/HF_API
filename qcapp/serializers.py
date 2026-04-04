@@ -113,27 +113,6 @@ class VueProcessSequenceSerializer(serializers.ModelSerializer):
 
 
 
-# class MachineTrasnsferSerializer(serializers.ModelSerializer):
-#     machine_id = serializers.PrimaryKeyRelatedField(
-#         queryset=machine_details.objects.all(),
-#         source='machine'
-#     )
-#     machine = serializers.CharField(source='machine.Identity', read_only=True)
-#     unit_name = serializers.CharField(source='unit.name', read_only=True)
-#     line_number = serializers.IntegerField(source='line.line_number', read_only=True)
-
-#     class Meta:
-#         model = MachineAllocation
-#         fields = ['id', 'machine', 'machine_id', 'unit', 'unit_name', 'line', 'line_number', 'allocated_at']
-
-#     def validate(self, data):
-#         # Validate that line belongs to the unit
-#         unit = data.get('unit', getattr(self.instance, 'unit', None))
-#         line = data.get('line', getattr(self.instance, 'line', None))
-#         if line and unit and line.unit != unit:
-#             raise serializers.ValidationError("Selected line does not belong to the selected unit")
-#         return data
-
 
 class MachineTrasnsferSerializer(serializers.ModelSerializer):
 
