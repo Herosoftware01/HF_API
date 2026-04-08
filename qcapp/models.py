@@ -240,17 +240,16 @@ class Empwisesal(models.Model):
 
 class emp_allocate(models.Model):
     emp_code = models.CharField(max_length=50)
-
     machine = models.ForeignKey(
         machine_details,
         on_delete=models.CASCADE,
         related_name="emp_allocations"
     )
-
     date = models.DateField(auto_now_add=True)
     unit = models.IntegerField()
     line = models.IntegerField()
     status = models.BooleanField(default=False)
+    seq = models.CharField(max_length=100, null=True, blank=True)
 
 
 class VueProcessSequence(models.Model):

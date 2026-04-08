@@ -591,6 +591,8 @@ class EmpAllocateAPIView(APIView):
         unit = request.data.get("unit")
         line = request.data.get("line")
         status = request.data.get("status", 1)  # default online
+        sequence = request.data.get("sequence")
+        
 
         if not emp_code or not machine_id or not unit or not line:
             return Response(
@@ -609,10 +611,16 @@ class EmpAllocateAPIView(APIView):
             date=today  # use correct field
         ).first() # get latest allocation if multiple exist
 
+        # if allocation:
+        #     allocation.status = status
+        #     allocation.save()
+        #     return Response({"message": "Status updated"})
         if allocation:
+            # Update case-layum sequence-ah save pannanum
             allocation.status = status
+            allocation.seq = sequence if sequence else None # Empty string-ah irundha NULL-ah save aagum
             allocation.save()
-            return Response({"message": "Status updated"})
+            return Response({"message": "Status and Sequence updated"})
         else:
             emp_allocate.objects.create(
                 emp_code=emp_code,
@@ -620,7 +628,8 @@ class EmpAllocateAPIView(APIView):
                 unit=unit,
                 line=line,
                 status=status,
-                date=today
+                date=today,
+                seq=sequence if sequence else None,
             )
             return Response({"message": "Employee allocated"})
 
@@ -637,8 +646,6 @@ def get_process_sequence(request):
     queryset = VueProcessSequence.objects.using('demo').filter(jobno=jobno, topbottom_des=topbottom_des).order_by('sl')
     serializer = VueProcessSequenceSerializer(queryset, many=True)
     return Response(serializer.data)
-
-
 
 
 @api_view(['GET'])
@@ -663,7 +670,7 @@ def get_machine_employee(request, identity):
                 if employee.photo:
                     filename = employee.photo.split('\\')[-1]
                     staff_url = settings.STAFF_IMAGES_URL.rstrip('/')
-                    photo_url = f"http://127.0.0.1:8000/{staff_url}/{filename}"
+                    photo_url = f"https://hfapi.herofashion.com/{staff_url}/{filename}"
 
         # Fetch matching processes from VueProcessSequence
         jobno = request.query_params.get('jobno')
