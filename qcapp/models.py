@@ -49,6 +49,8 @@ class qc_piece_data(models.Model):
     qc_type = models.CharField(max_length=50)
     user_id = models.IntegerField()
     date = models.DateTimeField(default=datetime.datetime.now)
+    seq = models.CharField(max_length=100)
+    machine_id = models.CharField(max_length=100)
     
 
 class qc_piece_final(models.Model):
@@ -87,6 +89,7 @@ class roving_qc_mistake(models.Model):
     remark = models.CharField(max_length=200, blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True)
     seq = models.CharField(max_length=100)
+   
 
     def __str__(self):
         return f"{self.qc_piece.bundle_no} - {self.machine_id} - {self.operation}"
