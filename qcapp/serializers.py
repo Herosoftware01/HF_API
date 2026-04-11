@@ -85,7 +85,7 @@ class MachineAllocationSerializer(serializers.ModelSerializer):
             filename = emp_details.photo.split('\\')[-1]
             # Ensure no double slashes
             staff_url = settings.STAFF_IMAGES_URL.rstrip('/')
-            photo_url = f"http://127.0.0.1:8000/{staff_url}/{filename}"
+            photo_url = f"https://hfapi.herofashion.com/{staff_url}/{filename}"
         else:
             # Default profile picture if none exists
             photo_url = "https://www.example.com/default-profile.png"
