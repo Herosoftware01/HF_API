@@ -11,6 +11,7 @@ from .models import QcAdminMistake,VueUser,Unit,Line,roving_qc_mistake,qc_piece_
 from .serializers import QcAdminMistakeSerializer,UnitSerializer,MachineTrasnsferSerializer,MachineSerializer,LineSerializer, MachineAllocationSerializer, VueProcessSequenceSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 from collections import defaultdict
+from django.shortcuts import get_object_or_404
 
 from datetime import date
 from django.utils.timezone import now
@@ -777,35 +778,148 @@ def get_process_sequence(request):
 #         }, status=404)
 
 
+# @api_view(['GET'])
+# def get_machine_employee(request, identity):
+#     print("identity",identity)
+#     try:
+#         identity = identity.rstrip('/')
+#         machine = machine_details.objects.get(Identity__iexact=identity)
+
+#         today = now().date()
+#         last_entry = emp_allocate.objects.filter(machine=machine, date=today).order_by('-id').first()
+
+#         emp_code = None
+#         emp_name = None
+#         photo_url = "https://www.example.com/default-profile.png"
+
+#         if last_entry:
+#             emp_code = last_entry.emp_code
+#             employee = Empwisesal.objects.using('main').filter(status='working', code=emp_code).first()
+#             if employee:
+#                 emp_name = employee.name
+#                 if employee.photo:
+#                     filename = employee.photo.split('\\')[-1]
+#                     staff_url = settings.STAFF_IMAGES_URL.rstrip('/')
+#                     photo_url = f"https://hfapi.herofashion.com/{staff_url}/{filename}"
+
+#         # Fetch matching processes from VueProcessSequence
+#         jobno = request.query_params.get('jobno')
+#         topbottom_des = request.query_params.get('topbottom_des')
+
+#         processes = []
+#         if jobno and topbottom_des:
+#             seq_match = list(
+#                 qc_piece_final.objects.filter(
+#                     jobno=jobno,
+#                     product=topbottom_des
+#                 ).values_list('seq', flat=True)
+#             )
+
+#             print("seq =", seq_match)
+#             queryset = VueProcessSequence.objects.using('demo').filter(
+#                 jobno=jobno,
+#                 topbottom_des=topbottom_des,
+#                 mc=machine.mcgrp
+#             ).order_by('sl')
+            
+#             processes = [
+#                 {
+#                     "sl": p.sl,
+#                     "sl1": p.sl1,
+#                     "prsid": p.prsid,
+#                     "process_des": p.process_des,
+#                     "mc": p.mc
+#                 } 
+#                 for p in queryset
+#                 if p.process_des not in seq_match
+#             ]
+
+#         return Response({
+#             "machine_identity": machine.Identity,
+#             "machine_id": machine.id,
+#             "mcgrp": machine.mcgrp,
+#             "emp_code": emp_code,
+#             "employee_name": emp_name,
+#             "emp_photo": photo_url,
+#             "has_data": True if last_entry else False,
+#             "processes": processes
+#         })
+
+#     except machine_details.DoesNotExist:
+#         return Response({
+#             "error": "Machine not found",
+#             "has_data": False,
+#             "processes": []
+#         }, status=404)
+
+
+
 @api_view(['GET'])
 def get_machine_employee(request, identity):
-    print("identity",identity)
+    print("identity", identity)
+
     try:
-        identity = identity.rstrip('/')
-        machine = machine_details.objects.get(Identity__iexact=identity)
-
-        today = now().date()
-        last_entry = emp_allocate.objects.filter(machine=machine, date=today).order_by('-id').first()
-
-        emp_code = None
-        emp_name = None
-        photo_url = "https://www.example.com/default-profile.png"
-
-        if last_entry:
-            emp_code = last_entry.emp_code
-            employee = Empwisesal.objects.using('main').filter(status='working', code=emp_code).first()
-            if employee:
-                emp_name = employee.name
-                if employee.photo:
-                    filename = employee.photo.split('\\')[-1]
-                    staff_url = settings.STAFF_IMAGES_URL.rstrip('/')
-                    photo_url = f"https://hfapi.herofashion.com/{staff_url}/{filename}"
-
-        # Fetch matching processes from VueProcessSequence
+        unit = request.query_params.get('unit')
+        line = request.query_params.get('line')
         jobno = request.query_params.get('jobno')
         topbottom_des = request.query_params.get('topbottom_des')
 
+        print("unit==", unit, "line==", line)
+
+        identity = identity.rstrip('/')
+        today = now().date()
+
+        # ✅ Step 1: Get line_id from Line table
+        line_obj = Line.objects.filter(
+            unit_id=unit,
+            line_number=line
+        ).first()
+
+        if not line_obj:
+            return Response({
+                "error": "Line not found",
+                "has_data": False,
+                "processes": []
+            }, status=404)
+
+        # ✅ Step 2: Match EVERYTHING in one query
+        last_entry = emp_allocate.objects.select_related('machine').filter(
+            machine__Identity__iexact=identity,
+            date=today,
+            unit=unit,
+            line=line_obj.id   # ✅ FK match
+        ).order_by('-id').first()
+
+        # ❌ If not match → Machine not found
+        if not last_entry:
+            return Response({
+                "error": "Machine not found",
+                "has_data": False,
+                "processes": []
+            }, status=404)
+
+        machine = last_entry.machine
+
+        # ---------------- EMPLOYEE ----------------
+        emp_code = last_entry.emp_code
+        emp_name = None
+        photo_url = "https://www.example.com/default-profile.png"
+
+        employee = Empwisesal.objects.using('main').filter(
+            status='working',
+            code=emp_code
+        ).first()
+
+        if employee:
+            emp_name = employee.name
+            if employee.photo:
+                filename = employee.photo.split('\\')[-1]
+                staff_url = settings.STAFF_IMAGES_URL.rstrip('/')
+                photo_url = f"https://hfapi.herofashion.com/{staff_url}/{filename}"
+
+        # ---------------- PROCESSES ----------------
         processes = []
+
         if jobno and topbottom_des:
             seq_match = list(
                 qc_piece_final.objects.filter(
@@ -814,13 +928,14 @@ def get_machine_employee(request, identity):
                 ).values_list('seq', flat=True)
             )
 
-            print("seq =", seq_match)
             queryset = VueProcessSequence.objects.using('demo').filter(
                 jobno=jobno,
                 topbottom_des=topbottom_des,
                 mc=machine.mcgrp
+            ).exclude(
+                process_des__in=seq_match
             ).order_by('sl')
-            
+
             processes = [
                 {
                     "sl": p.sl,
@@ -828,11 +943,11 @@ def get_machine_employee(request, identity):
                     "prsid": p.prsid,
                     "process_des": p.process_des,
                     "mc": p.mc
-                } 
+                }
                 for p in queryset
-                if p.process_des not in seq_match
             ]
 
+        # ---------------- RESPONSE ----------------
         return Response({
             "machine_identity": machine.Identity,
             "machine_id": machine.id,
@@ -840,18 +955,17 @@ def get_machine_employee(request, identity):
             "emp_code": emp_code,
             "employee_name": emp_name,
             "emp_photo": photo_url,
-            "has_data": True if last_entry else False,
+            "has_data": True,
             "processes": processes
         })
 
-    except machine_details.DoesNotExist:
+    except Exception as e:
+        print("ERROR:", str(e))
         return Response({
-            "error": "Machine not found",
+            "error": "Internal server error",
             "has_data": False,
             "processes": []
-        }, status=404)
-
-
+        }, status=500)
 
 
 

@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ['hfapi.herofashion.com','localhost','127.0.0.1','10.1.21.13','1
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://hf.herofashion.com",
+    "https://web.herofashion.com",
     "http://10.1.21.13:3000"
 ]
 # Application definition
