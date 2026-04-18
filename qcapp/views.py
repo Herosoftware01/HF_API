@@ -589,6 +589,23 @@ class MachineAllocationDetailAPIView(APIView):
 
 
 
+# class EmployeeAPIView(APIView):
+#     def get(self, request):
+        
+#         employees = Empwisesal.objects.using('main').filter(status='working').values('code', 'name', 'photo','dept')
+
+#         data = [
+#             {
+#                 "code": emp['code'],
+#                 "name": emp['name'],
+#                 "dept": emp['dept'],
+#             }
+#             for emp in employees
+#         ]
+      
+#         return Response(data)
+
+
 class EmployeeAPIView(APIView):
     def get(self, request):
         employees = Empwisesal.objects.using('main').filter(status='working').values('code', 'name', 'photo', 'dept')

@@ -258,7 +258,6 @@ class emp_allocate(models.Model):
     status = models.BooleanField(default=False)
     seq = models.CharField(max_length=100, null=True, blank=True)
 
-
 class VueProcessSequence(models.Model):
     jobno = models.CharField(db_column='JOBNO', max_length=50)  # Field name made lowercase.
     topbottom_des = models.CharField(db_column='TopBottom_des', max_length=50, blank=True, null=True)  # Field name made lowercase.
