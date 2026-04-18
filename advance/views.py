@@ -171,9 +171,9 @@ def request_advance(request):
                     status=400
                 )
 
-            last = Adreq.objects.aggregate(Max('entryno'))['entryno__max'] or 0
+            last = Adreq.objects.using('mssql1').aggregate(Max('entryno'))['entryno__max'] or 0
 
-            obj = Adreq.objects.create(
+            obj = Adreq.objects.using('mssql1').create(
                 entryno=last + 1,
                 dt=data.get('dt'),
                 empid=empid,
@@ -289,7 +289,7 @@ def send_advance_mail(request):
             entryno = data.get('entryno')
 
             # 🔹 OPTIMIZED DB QUERY
-            obj = Adreq.objects.only('empid', 'amt', 'remarks').get(entryno=entryno)
+            obj = Adreq.objects.using('mssql1').only('empid', 'amt', 'remarks').get(entryno=entryno)
 
             # 🔹 API CACHE
             api_url = "https://app.herofashion.com/incentive/api/emp/"
@@ -539,7 +539,7 @@ def state(request):
             try:
                 from_date = datetime.strptime(from_date, "%Y-%m-%d")
                 to_date = datetime.strptime(to_date, "%Y-%m-%d")
-                data = data.filter(date__range=[from_date, to_date])
+                data = data.filter(dt__range=[from_date, to_date])
             except ValueError:
                 return JsonResponse({"error": "Invalid date format. Use YYYY-MM-DD"}, status=400)
 
