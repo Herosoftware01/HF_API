@@ -16,9 +16,9 @@ urlpatterns = [
     path("save_final_piece/", views.save_final_piece),
     path("check_bundle_entry_status/", views.check_bundle_entry_status),
     path("get_last_bundle/", views.get_last_bundle),
-    path("import_machine_details_from_excel/", views.import_machine_details_from_excel),
-    
-
+    # path("import_machine_details_from_excel/", views.import_machine_details_from_excel),
+    path('machine-status/', machine_status_api),
+    path('api/needle_details/', needle_details_api),
 
     path('api/machines/', MachineListAPIView.as_view(), name='machines-list'),
     path('api/units/', UnitListAPIView.as_view(), name='units-list'),
