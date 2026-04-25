@@ -875,6 +875,7 @@ def get_machine_employee(request, identity):
         line = request.query_params.get('line')
         jobno = request.query_params.get('jobno')
         topbottom_des = request.query_params.get('topbottom_des')
+        bundleNo = request.query_params.get('bundleNo')
 
         print("unit==", unit, "line==", line)
 
@@ -936,7 +937,8 @@ def get_machine_employee(request, identity):
             seq_match = list(
                 qc_piece_final.objects.filter(
                     jobno=jobno,
-                    product=topbottom_des
+                    product=topbottom_des,
+                    bundle_no=bundleNo
                 ).values_list('seq', flat=True)
             )
 

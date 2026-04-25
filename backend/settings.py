@@ -33,6 +33,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://hf.herofashion.com",
     "https://web.herofashion.com",
+    "https://dev.herofashion.com",
     "http://10.1.21.13:3000"
 ]
 # Application definition
