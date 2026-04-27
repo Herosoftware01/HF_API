@@ -182,7 +182,7 @@ def get_bundle_data(request):
         checked_bundle_ids = set(
             qc_piece_final.objects.filter(
                 bundle_id__in=bundle_ids_from_api
-            ).exclude(qc_type='rowing_qc')   # 👈 ignore rowing_qc
+            ).exclude(qc_type='rowing_qc')   #  ignore rowing_qc
             .values_list('bundle_id', flat=True)
         )
 
@@ -373,7 +373,7 @@ def get_last_bundle(request):
     is_completed = qc_piece_final.objects.filter(bundle_id=bundle_id).exists()
 
     # =========================
-    # 👉 ROVING QC EXTRA DATA
+    #  ROVING QC EXTRA DATA
     # =========================
     roving_data = {}
 
@@ -412,7 +412,7 @@ def get_last_bundle(request):
         "checked_pieces": piece,
         "is_completed": is_completed,
 
-        # 👇 extra only for roving
+        #  extra only for roving
         **roving_data
     })
 
@@ -881,7 +881,7 @@ def get_machine_employee(request, identity):
         identity = identity.rstrip('/')
         today = now().date()
 
-        # ✅ Step 1: Get line_id from Line table
+        #  Step 1: Get line_id from Line table
         line_obj = Line.objects.filter(
             unit_id=unit,
             line_number=line
@@ -894,15 +894,15 @@ def get_machine_employee(request, identity):
                 "processes": []
             }, status=404)
 
-        # ✅ Step 2: Match EVERYTHING in one query
+        #  Step 2: Match EVERYTHING in one query
         last_entry = emp_allocate.objects.select_related('machine').filter(
             machine__Identity__iexact=identity,
             date=today,
             unit=unit,
-            line=line_obj.id   # ✅ FK match
+            line=line_obj.id   # FK match
         ).order_by('-id').first()
 
-        # ❌ If not match → Machine not found
+        #  If not match → Machine not found
         if not last_entry:
             return Response({
                 "error": "Machine not found",
@@ -1110,7 +1110,7 @@ def needle_details_api(request):
     except Exception as e:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
-    # ✅ validation
+    #  validation
     if not machine:
         return JsonResponse({"error": "machine_id is required"}, status=400)
 
@@ -1118,7 +1118,7 @@ def needle_details_api(request):
     if not needle_changed:
         count = 0
 
-    # ✅ save
+    #  save
     Needle_change.objects.create(
         machine=machine,
         emp_code=emp_code if emp_code else "",
@@ -1130,7 +1130,6 @@ def needle_details_api(request):
     return JsonResponse({
         "message": "Needle details saved successfully"
     })
-
 
 
 
@@ -1164,31 +1163,6 @@ def get_order_measurements(request):
     })
 
 
-# @csrf_exempt
-# def save_measurement(request):
-#     if request.method == "POST":
-#         try:
-#             data = json.loads(request.body)
-
-#             obj = cut_sample_data.objects.create(
-#                 jobno=data.get("jobNo"),
-#                 bundle_no=data.get("bundleNo"),
-#                 product=data.get("product"),
-#                 color=data.get("colour"),
-#                 size=data.get("size"),
-#                 title=data.get("title"),
-#                 measurement_dtls=data.get("measurement_dtls"),
-#                 measurement=data.get("measurement"),
-#                 reading1=data.get("reading1"),
-#                 reading2=data.get("reading2"),
-#                 reading3=data.get("reading3"),
-#             )
-
-#             return JsonResponse({"status": "success", "id": obj.id})
-
-#         except Exception as e:
-#             return JsonResponse({"status": "error", "message": str(e)})
-
 
 @csrf_exempt
 def save_measurement(request):
@@ -1198,7 +1172,10 @@ def save_measurement(request):
 
             jobno = data.get("jobNo")
             bundle_no = data.get("bundleNo")
+            bundle_id = data.get("bundle_id")
             measurement_dtls = data.get("measurement_dtls")
+            bf_ironing = data.get("bf_ironing")
+            af_ironing = data.get("af_ironing")
 
             update_fields = {}
 
@@ -1224,6 +1201,9 @@ def save_measurement(request):
             obj, created = cut_sample_data.objects.update_or_create(
                 jobno=jobno,
                 bundle_no=bundle_no,
+                bundle_id=bundle_id,
+                bf_ironing=bf_ironing,
+                af_ironing=af_ironing,
                 measurement_dtls=measurement_dtls,
                 defaults={
                     "product": data.get("product"),
@@ -1257,14 +1237,15 @@ def final_save_measurement(request):
             obj = cut_sample_data_final.objects.create(
                 jobno=data.get("jobNo"),
                 bundle_no=data.get("bundleNo"),
+                bundle_id=data.get("bundle_id"),
                 product=data.get("product"),
                 color=data.get("colour"),
                 size=data.get("size"),
 
-                bf_ironing=data.get("bf_ironing", False),
-                af_ironing=data.get("af_ironing", False),
+                bf_ironing=data.get("bf_ironing"),
+                af_ironing=data.get("af_ironing"),
 
-                # 🔥 force save = 1 when button clicked
+                # force save = 1 when button clicked
                 force_save=True if data.get("force_save") else False
             )
 
@@ -1278,4 +1259,75 @@ def final_save_measurement(request):
                 "status": "error",
                 "message": str(e)
             })
+
+
+@csrf_exempt
+def check_ironing_status(request):
+    if request.method == "GET":
+        jobno = request.GET.get("jobno")
+        bundle_no = request.GET.get("bundle_no")
+
+        try:
+            qs = cut_sample_data_final.objects.filter(
+                jobno=jobno,
+                bundle_no=bundle_no
+            )
+
+            #  No record
+            if not qs.exists():
+                return JsonResponse({
+                    "status": "new",
+                    "bf_ironing": False,
+                    "af_ironing": False
+                })
+
+            # CHECK FULL HISTORY
+            bf_done = qs.filter(bf_ironing=True).exists()
+            af_done = qs.filter(af_ironing=True).exists()
+
+            return JsonResponse({
+                "status": "exists",
+                "bf_ironing": bf_done,
+                "af_ironing": af_done
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                "status": "error",
+                "message": str(e)
+            })
+        
+
+@api_view(['GET'])
+def get_existing_measurements(request):
+    bundle_id = request.GET.get('bundle_id')
+    product = request.GET.get('product')
+    bf_ironing = request.GET.get('bf_ironing')
+    af_ironing = request.GET.get('af_ironing')
+
+    bf_ironing = True if bf_ironing in ["true", "1", True] else False
+    af_ironing = True if af_ironing in ["true", "1", True] else False
+
+    data = cut_sample_data.objects.filter(
+        bundle_id=bundle_id,
+        product=product,
+        bf_ironing=bf_ironing,
+        af_ironing=af_ironing
+    )
+
+    result = []
+    for d in data:
+        result.append({
+            "title": d.title,
+            "measurement_dtls": d.measurement_dtls,
+            "measurement": d.measurement,
+            "pcs_no_r1": d.pcs_no_r1,
+            "pcs_no_r2": d.pcs_no_r2,
+            "pcs_no_r3": d.pcs_no_r3,
+            "reading1": d.reading1,
+            "reading2": d.reading2,
+            "reading3": d.reading3,
+        })
+
+    return Response({"data": result})
 

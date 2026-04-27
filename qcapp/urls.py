@@ -40,7 +40,8 @@ urlpatterns = [
     path('get_order_measurements',views.get_order_measurements,name='get_order_measurements'),
     path("save-measurement/", views.save_measurement),
     path("final-save-measurement/", views.final_save_measurement),
-    
+    path("check-ironing-status/", views.check_ironing_status),
+    path("get-existing-measurements/", views.get_existing_measurements),
 
 ]
 
