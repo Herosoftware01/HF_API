@@ -123,7 +123,8 @@ DATABASES = {
         'OPTIONS': {
             'driver': 'ODBC Driver 17 for SQL Server',
             'trusted_connection': "yes"
-        }
+        },
+        'CONN_MAX_AGE': 300,
     },
 
     'demo': {
@@ -136,7 +137,8 @@ DATABASES = {
         'OPTIONS': {
             'driver': 'ODBC Driver 17 for SQL Server',
             'trusted_connection': "yes"
-        }
+        },
+        'CONN_MAX_AGE': 300,
     },
     'main': {
         'ENGINE': 'mssql',
@@ -148,7 +150,8 @@ DATABASES = {
         'OPTIONS': {
             'driver': 'ODBC Driver 17 for SQL Server',
             'trusted_connection': "yes"
-        }
+        },
+        'CONN_MAX_AGE': 300,
     },
     'mssql1' : {
         'ENGINE': 'mssql',
@@ -160,7 +163,8 @@ DATABASES = {
         'OPTIONS': {
                 'driver': 'ODBC Driver 17 for SQL Server',
                 'trusted_connection': "yes"
-            }
+            },
+        'CONN_MAX_AGE': 300,
     },
      'app' : {
         'ENGINE': 'mssql',
@@ -172,7 +176,8 @@ DATABASES = {
         'OPTIONS': {
                 'driver': 'ODBC Driver 17 for SQL Server',
                 'trusted_connection': "yes"
-            }
+            },
+        'CONN_MAX_AGE': 300,
     },
      'demo1': {
             'ENGINE': 'mssql',
@@ -184,7 +189,21 @@ DATABASES = {
             'OPTIONS': {
                 'driver': 'ODBC Driver 17 for SQL Server',
                 'trusted_connection': "yes"
-            }
+            },
+            'CONN_MAX_AGE': 300,
+    },
+    'test': {
+            'ENGINE': 'mssql',
+            'NAME': 'testerphero',
+            'USER': 'sa',
+            'PASSWORD': 'Fashion@01',
+            'HOST': '10.1.21.11',
+            'PORT': '1433',
+            'OPTIONS': {
+                'driver': 'ODBC Driver 17 for SQL Server',
+                'trusted_connection': "yes"
+            },
+            'CONN_MAX_AGE': 300,
     },
 }
 
