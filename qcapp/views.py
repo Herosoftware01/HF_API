@@ -894,6 +894,23 @@ class EmpAllocateAPIView(APIView):
                 {"error": "unit and line are required"},
                 status=400
             )
+            
+        same_allocation = emp_allocate.objects.filter(
+            emp_code=emp_code,
+            machine_id=machine_id,
+            jobno=jobno,
+            top_bottom=top_bottom,
+            seq=sequence,
+            date__date=today
+        ).exists()
+
+        if same_allocation:
+            return Response(
+                {
+                    "error": "Already allocated today"
+                },
+                status=400
+            )
 
         # -------------------------
         # EMPLOYEE ALREADY ONLINE ?
