@@ -2,6 +2,7 @@ from django.forms.models import model_to_dict
 from django.http import JsonResponse
 import json
 from django.utils import timezone
+from datetime import timedelta
 from django.views.decorators.csrf import csrf_exempt
 from .models import TrsWorkentry,user_master,project_master,category_master,subcategory_master,task_master,workentry_pause
 
@@ -303,6 +304,16 @@ def subcategory_master_api(request):
             }, status=404)
 
 
+def safe_parse_duration(duration_val):
+    if not duration_val:
+        return None
+    try:
+        # Handles raw ints (2), string ints ("2"), and Django formats ("2 00:00:00")
+        days = int(str(duration_val).split()[0])
+        return timedelta(days=days)
+    except (ValueError, TypeError):
+        return None
+
 @csrf_exempt
 def task_master_api(request, id=None):
     if request.method == 'GET':
@@ -316,10 +327,11 @@ def task_master_api(request, id=None):
                 'task_name',
                 'task_description',
                 'assing_date',
+                'task_priority',
+                'task_duration',
                 'task_status',
                 'task_start_date',
                 'task_end_date',
-                'created_at',
                 'updated_at'
             )),
             safe=False
@@ -345,6 +357,9 @@ def task_master_api(request, id=None):
                 code_id=user_id,   
                 task_name=body.get('task_name'),
                 assing_date=body.get('assing_date'),
+                task_priority=body.get('task_priority', 'Medium'),
+                # Convert the raw duration into a timedelta object
+                task_duration=safe_parse_duration(body.get('task_duration')),
                 task_description=body.get('task_description', ''),
                 task_status=body.get('task_status', 'Pending')
             )
@@ -386,6 +401,13 @@ def task_master_api(request, id=None):
                 
             if 'task_name' in body:
                 obj.task_name = body.get('task_name')
+
+            if 'task_priority' in body:
+                obj.task_priority = body.get('task_priority')
+
+            if 'task_duration' in body:
+                # Convert the raw duration into a timedelta object
+                obj.task_duration = safe_parse_duration(body.get('task_duration'))
                 
             if 'task_start_date' in body:
                 obj.task_start_date = body.get('task_start_date')
@@ -436,7 +458,6 @@ def task_master_api(request, id=None):
         "status": False,
         "message": "Method not allowed"
     }, status=405)
-
 
 
 @csrf_exempt

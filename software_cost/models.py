@@ -7,6 +7,7 @@ class user_master(models.Model):
     user_role = models.CharField(max_length=100)
     user_status = models.BooleanField(default=True)
     cost_per_hour = models.DecimalField(max_digits=10, decimal_places=2)
+    working_hours_per_day = models.DecimalField(max_digits=5, decimal_places=2, default=None, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -52,8 +53,9 @@ class task_master(models.Model):
     task_description = models.TextField(null=True, blank=True)
     task_start_date = models.DateTimeField(null=True, blank=True)
     task_end_date = models.DateTimeField(null=True, blank=True)
+    task_priority = models.CharField(max_length=50, choices=[('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High'), ('Critical', 'Critical')], default='Medium')
+    task_duration = models.DurationField(null=True, blank=True)
     task_status = models.CharField(max_length=50, default="Pending") # Changed to CharField for "Pending", "Completed", etc.
-    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
