@@ -23,6 +23,7 @@ def user_master_api(request):
                 code=body.get('code'),
                 user_role=body.get('user_role'),
                 cost_per_hour=body.get('cost_per_hour'),
+                working_hours_per_day=body.get('working_hours_per_day'),
                 user_status=body.get('user_status'),
                 created_at=timezone.now(),
                 updated_at=timezone.now()
@@ -47,6 +48,7 @@ def user_master_api(request):
             obj.user_name = body.get('user_name', obj.user_name)
             obj.user_role = body.get('user_role', obj.user_role)
             obj.cost_per_hour = body.get('cost_per_hour', obj.cost_per_hour)
+            obj.working_hours_per_day = body.get('working_hours_per_day', obj.working_hours_per_day)
             obj.user_status = body.get('user_status', obj.user_status)
             obj.updated_at = timezone.now()
 
