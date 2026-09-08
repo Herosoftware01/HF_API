@@ -25,9 +25,9 @@ urlpatterns = [
     path('', include('herofashion.urls')),
     path('qcapp/', include('qcapp.urls')),
     path('syncfushion/', include('syncfushion.urls')),
-    path('reports/', include('reports.urls')) ,
     path('bit_checking/', include('bit_checking.urls')) ,
     path('advance/', include('advance.urls')),
+    path('reports/', include('reports.urls')) ,
     path('imp_reports/', include('imp_reports.urls')),
     # path('chat/', include('chat.urls')),
     path('api/chat_app/', include('chat_app.urls')),
@@ -39,7 +39,7 @@ urlpatterns = [
     path('fashionr/', include('fashionr.urls')),
     path('dcapp/', include('dc_app.urls')),
     path('accessory/', include('bit_checking.urls')) ,
-    # path('software_cost/', include('software_costing.urls')) ,
+    path('software_cost/', include('software_cost.urls')) ,
 ] 
 
 

@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 import os
+# from dotenv import load_dotenv
+
+# load_dotenv(Path(__file__).resolve().parent.parent / '.env')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,11 +43,12 @@ CORS_ALLOWED_ORIGINS = [
     "http://10.1.21.80:3000",
     "https://hfempdtls.netlify.app",
     "http://10.1.21.110:7003",
+    "http://10.1.21.156:3000",
     
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://10.1.21.158:3000/",
+    "http://10.1.21.158:3000",
     "http://localhost:3000",
     "http://10.1.21.110:7003",
     "https://hf.herofashion.com",
@@ -54,6 +58,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://dev.herofashion.com",
     "https://hfempdtls.netlify.app",
     "http://10.1.21.110:7003",
+    "http://10.1.21.156:3000",
     "http://10.1.21.80:3000",
     
 ]
@@ -78,15 +83,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework_simplejwt.token_blacklist', 
+    'rest_framework_simplejwt.token_blacklist',
     'rest_framework',
     'django_filters',
     'corsheaders',
+    'reports',
     'herofashion',
     'qcapp',
     'syncfushion',
     'advance',
-    'reports',
     'bit_checking',
     'imp_reports',
     # 'chat',
@@ -98,7 +103,8 @@ INSTALLED_APPS = [
     'bundle_tracking',
     'production_live_scan',
     'fashionr',
-    # 'software_costing',
+    'software_cost',
+    
 ]
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 200
@@ -119,9 +125,9 @@ DEBUG = True
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -187,7 +193,7 @@ DATABASES = {
         'HOST': '10.1.21.11',
         'PORT': '1433',
         'OPTIONS': {
-            'driver': 'ODBC Driver 17 for SQL Server',
+            "driver": "ODBC Driver 17 for SQL Server",
             'trusted_connection': "yes"
         },
         'CONN_MAX_AGE': 300,
@@ -201,7 +207,7 @@ DATABASES = {
         'HOST': '10.1.21.11',
         'PORT': '1433',
         'OPTIONS': {
-            'driver': 'ODBC Driver 17 for SQL Server',
+            "driver": "ODBC Driver 17 for SQL Server",
             'trusted_connection': "yes"
         },
         'CONN_MAX_AGE': 300,
@@ -214,7 +220,7 @@ DATABASES = {
         'HOST': '10.1.21.11',
         'PORT': '1433',
         'OPTIONS': {
-            'driver': 'ODBC Driver 17 for SQL Server',
+            "driver": "ODBC Driver 17 for SQL Server",
             'trusted_connection': "yes"
         },
         'CONN_MAX_AGE': 300,
@@ -227,9 +233,9 @@ DATABASES = {
         'HOST': '10.1.21.11',
         'PORT': '1433',
         'OPTIONS': {
-                'driver': 'ODBC Driver 17 for SQL Server',
-                'trusted_connection': "yes"
-            },
+            "driver": "ODBC Driver 17 for SQL Server",
+            'trusted_connection': "yes"
+        },
         'CONN_MAX_AGE': 300,
     },
      'app' : {
@@ -240,9 +246,9 @@ DATABASES = {
         'HOST': '10.1.21.11',
         'PORT': '1433',
         'OPTIONS': {
-                'driver': 'ODBC Driver 17 for SQL Server',
-                'trusted_connection': "yes"
-            },
+            "driver": "ODBC Driver 17 for SQL Server",
+            'trusted_connection': "yes"
+        },
         'CONN_MAX_AGE': 300,
     },
      'demo1': {
@@ -253,7 +259,7 @@ DATABASES = {
             'HOST': '10.1.21.11',
             'PORT': '1433',
             'OPTIONS': {
-                'driver': 'ODBC Driver 17 for SQL Server',
+                "driver": "ODBC Driver 17 for SQL Server",
                 'trusted_connection': "yes"
             },
             'CONN_MAX_AGE': 300,
@@ -266,7 +272,7 @@ DATABASES = {
             'HOST': '10.1.21.11',
             'PORT': '1433',
             'OPTIONS': {
-                'driver': 'ODBC Driver 17 for SQL Server',
+                "driver": "ODBC Driver 17 for SQL Server",
                 'trusted_connection': "yes"
             },
             'CONN_MAX_AGE': 300,

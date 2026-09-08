@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from rest_framework import status
 from rest_framework import viewsets
 from .models import GridSetting,DiWasg,DiWasg_img,TrsMaildtls, SyncfushionKanban, SyncfusionGantt, BlockEditor, FashionrResult, ViewAccinwpend
-from .models import ViewAccessoryDel, TmpQms, ViewCutBalpend
+from .models import ViewAccessoryDel, TmpQms, ViewCutBalpend, ViewAccpopending
 from .serializers import GridSettingSerializer,TrsMaildtlsSerializer
 from rest_framework.permissions import IsAuthenticated  # optional
 import json
@@ -810,19 +810,6 @@ def DueDateList(request):
     data = list(ViewAccinwpend.objects.using('test').all().values()) 
     return JsonResponse(data, safe=False)
 
-def CutBalpend(request):
-    queryset = list(ViewCutBalpend.objects.using('demo').all().values())
-    
-    for obj in queryset:
-        raw_path = obj['tbimg'] if obj.get('tbimg') else None
-        if raw_path:
-            filename = raw_path.split('\\')[-1]
-            obj['tbimg'] = f"https://app.herofashion.com/order_image/{filename}"
-        else:
-            obj['tbimg'] = ""
-
-    return JsonResponse(queryset, safe=False)
-
 @csrf_exempt
 def AccessoryDel(request):
     if request.method == "GET":
@@ -866,3 +853,68 @@ def AccessoryDel(request):
             "message": "retmark updated successfully",
             "updated": updated
         })
+
+from django.db.models import Sum, Min
+def CutBalpend(request):
+    qs = ViewCutBalpend.objects.using("demo").all()
+
+    # Normal: show all records
+    if request.GET.get("merge") != "true":
+        data = list(qs.values())
+
+        for obj in data:
+            path = obj.get("tbimg")
+            obj["tbimg"] = (
+                f"https://app.herofashion.com/order_image/{path.split('\\')[-1]}"
+                if path else ""
+            )
+
+        return JsonResponse(data, safe=False)
+
+    # Merge: jobno-wise
+    sum_fields = [
+        "order_qty", "rejection_qty", "required_qty", "plan_qty", "actual_cut_qty", "hand_cutting",
+    ]
+
+    data = list(
+        qs.values("ordno", "o_finaldelvdate", "topbottom_des", "clr")
+        .annotate(
+            slno=Min("slno"),
+            tbimg=Min("tbimg"),
+            remdays=Min("remdays"),
+            risk=Min("risk"),
+            **{field: Sum(field) for field in sum_fields})
+        .order_by("ordno")
+    )
+
+    for obj in data:
+        req = obj["required_qty"] or 0
+        path = obj.get("tbimg")
+        obj["tbimg"] = (
+            f"https://app.herofashion.com/order_image/{path.split('\\')[-1]}"
+            if path else ""
+        )
+        obj.update(
+            siz="All Size",
+            cut_pend=(obj["plan_qty"] or 0) - (obj["actual_cut_qty"] or 0),
+            planbal_pcs=(obj["required_qty"] or 0) - (obj["plan_qty"] or 0),
+            cutbal_pcs=(obj["required_qty"] or 0) - (obj["actual_cut_qty"] or 0),
+            plan_bal_pers=round(
+                100 - ((obj["plan_qty"] or 0) / req * 100), 2
+            ) if req else 0,
+            cutting_bal_pers=round(
+                100 - ((obj["actual_cut_qty"] or 0) / req * 100), 2
+            ) if req else 0,
+        )
+
+    return JsonResponse(data, safe=False)
+
+def AccPoPend(request):
+    queryset = ViewAccpopending.objects.using("test").all()
+    data = list(queryset.values(
+        'slno',  'orderno', 'des', 'uom', 'fdelvdate',
+        'ag', 'img', 'balpoqty', 'clr'
+    ))
+   
+    return JsonResponse(data, safe=False)
+
