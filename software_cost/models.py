@@ -63,7 +63,7 @@ class task_master(models.Model):
 
 
 
-class TrsWorkentry(models.Model):
+class Workentry(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
     username = models.CharField(db_column='UserName', max_length=100, db_collation='Latin1_General_CI_AI')  # Field name made lowercase.
     entrydate = models.DateField(db_column='EntryDate')  # Field name made lowercase.
@@ -80,14 +80,13 @@ class TrsWorkentry(models.Model):
     modifieddate = models.DateTimeField(db_column='ModifiedDate', blank=True, null=True)  # Field name made lowercase.
     durationminutes = models.IntegerField(db_column='DurationMinutes', blank=True, null=True)  # Field name made lowercase.
 
-    class Meta:
-        managed = False
-        db_table = 'Trs_Workentry'
+    def __str__(self):
+        return f"{self.username} - {self.entrydate}"
 
 
 class workentry_pause(models.Model):
     id = models.AutoField(primary_key=True)
-    workentry = models.ForeignKey(TrsWorkentry, on_delete=models.CASCADE)
+    workentry = models.ForeignKey(Workentry, on_delete=models.CASCADE)
     pause_start_time = models.DateTimeField()
     pause_end_time = models.DateTimeField(blank=True, null=True)
     pause_reason = models.TextField(blank=True, null=True)

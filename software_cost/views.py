@@ -4,7 +4,7 @@ import json
 from django.utils import timezone
 from datetime import timedelta
 from django.views.decorators.csrf import csrf_exempt
-from .models import TrsWorkentry,user_master,project_master,category_master,subcategory_master,task_master,workentry_pause
+from .models import Workentry,user_master,project_master,category_master,subcategory_master,task_master,workentry_pause
 
 
 @csrf_exempt
@@ -469,16 +469,16 @@ def trs_workentry(request, id=None):
     if request.method == 'GET':
         if id:
             try:
-                data = TrsWorkentry.objects.get(id=id)
+                data = Workentry.objects.get(id=id)
                 return JsonResponse(model_to_dict(data), safe=False)
-            except TrsWorkentry.DoesNotExist:
+            except Workentry.DoesNotExist:
                 return JsonResponse(
                     {"status": False, "message": "Record not found"},
                     status=404
                 )
 
         else:
-            data = TrsWorkentry.objects.using('default').all()
+            data = Workentry.objects.using('default').all()
 
             # Filters from query params
             name = request.GET.get('name')
@@ -504,7 +504,7 @@ def trs_workentry(request, id=None):
         try:
             body = json.loads(request.body)
 
-            obj = TrsWorkentry.objects.create(
+            obj = Workentry.objects.create(
                 username=body.get('username'),
                 entrydate=body.get('entrydate'),
                 project=body.get('project'),
@@ -544,7 +544,7 @@ def trs_workentry(request, id=None):
 
             body = json.loads(request.body)
 
-            obj = TrsWorkentry.objects.get(id=id)
+            obj = Workentry.objects.get(id=id)
 
             obj.username = body.get('username', obj.username)
             obj.entrydate = body.get('entrydate', obj.entrydate)
@@ -570,7 +570,7 @@ def trs_workentry(request, id=None):
                 "message": "Record updated successfully"
             })
 
-        except TrsWorkentry.DoesNotExist:
+        except Workentry.DoesNotExist:
             return JsonResponse({
                 "status": False,
                 "message": "Record not found"
@@ -585,7 +585,7 @@ def trs_workentry(request, id=None):
                     "message": "ID is required"
                 }, status=400)
 
-            obj = TrsWorkentry.objects.get(id=id)
+            obj = Workentry.objects.get(id=id)
             obj.delete()
 
             return JsonResponse({
@@ -593,7 +593,7 @@ def trs_workentry(request, id=None):
                 "message": "Record deleted successfully"
             })
 
-        except TrsWorkentry.DoesNotExist:
+        except Workentry.DoesNotExist:
             return JsonResponse({
                 "status": False,
                 "message": "Record not found"
@@ -669,8 +669,8 @@ def workentry_pause_api(request):
 
             # Check workentry exists
             try:
-                workentry = TrsWorkentry.objects.get(id=workentry_id)
-            except TrsWorkentry.DoesNotExist:
+                workentry = Workentry.objects.get(id=workentry_id)
+            except Workentry.DoesNotExist:
                 return JsonResponse({
                     "status": False,
                     "message": "Workentry not found"
@@ -741,9 +741,9 @@ def workentry_pause_api(request):
                 workentry_id = body.get('workentry_id')
 
                 try:
-                    workentry = TrsWorkentry.objects.get(id=workentry_id)
+                    workentry = Workentry.objects.get(id=workentry_id)
                     pause.workentry = workentry
-                except TrsWorkentry.DoesNotExist:
+                except Workentry.DoesNotExist:
                     return JsonResponse({
                         "status": False,
                         "message": "Workentry not found"
